@@ -64,41 +64,13 @@ python src/main.py pep --output pretty
 
   Пример:  python src/main.py latest-versions
 
-  Вывод:
-  
-  Ссылка на документацию Версия Статус
-https://docs.python.org/3.13/ 3.13 in development
-https://docs.python.org/3.12/ 3.12 pre-release
-https://docs.python.org/3.11/ 3.11 stable
-https://docs.python.org/3.10/ 3.10 security-fixes
-https://docs.python.org/3.9/ 3.9 security-fixes
-https://docs.python.org/3.8/ 3.8 security-fixes
-https://docs.python.org/3.7/ 3.7 EOL
-https://docs.python.org/3.6/ 3.6 EOL
-https://docs.python.org/3.5/ 3.5 EOL
-https://docs.python.org/2.7/ 2.7 EOL
-https://www.python.org/doc/versions/ All versions
-
 - Вывод в консоль в табличном виде (аргументы ```-o {pretty}```);
+  
   Пример:
   python src/main.py pep --output pretty
-  Вывод:
-+-------------+------------+
-| Статус      | Количество |
-+-------------+------------+
-| Active      | 31         |
-| Accepted    | 51         |
-| Final       | 274        |
-| Draft       | 24         |
-| Superseded  | 20         |
-| Deferred    | 37         |
-| Withdrawn   | 56         |
-| Rejected    | 122        |
-| April Fool! | 1          |
-| Total       | 616        |
-+-------------+------------+
 
 - Сохранение в формате csv (аргументы ```-o {file}```) в папку ```/src/results/```;
+
 Пример:
 python src/main.py whats-new --output file
 
