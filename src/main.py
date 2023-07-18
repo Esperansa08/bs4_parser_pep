@@ -26,7 +26,7 @@ def whats_new(session):
         'li', attrs={'class': 'toctree-l1'})
     results = [('Ссылка на статью', 'Заголовок', 'Редактор, Автор')]
     for section in tqdm(sections_by_python):
-        version_a_tag = section.find('a')
+        version_a_tag = find_tag(section, 'a')
         href = version_a_tag['href']
         version_link = urljoin(whats_new_url, href)
         response = get_response(session, version_link)
@@ -83,6 +83,8 @@ def download(session):
     downloads_dir.mkdir(exist_ok=True)
     archive_path = downloads_dir / filename
     response = session.get(archive_url)
+    if response is None:
+        return
     with open(archive_path, 'wb') as file:
         file.write(response.content)
     logging.info(f'Архив был загружен и сохранён: {archive_path}')
@@ -90,33 +92,34 @@ def download(session):
 
 def pep(session):
     pep_status_dict = Counter()
+    error_msg = ''
     response = get_response(session, PEP_URL)
     if response is None:
         return
     soup = BeautifulSoup(response.text, features='lxml')
-    section_tags = soup.find('section', {'id': ['index-by-category']})
-    table_tags = section_tags.find_all('table')
-    for table_tag in table_tags:
-        tr_tags = table_tag.find_all('tr')
-        for tr_tag in tr_tags[1:]:
-            a_tag = tr_tag.find('a')
-            href = a_tag['href']
-            first_column_tag = table_tag.find('abbr')
-            preview_status = first_column_tag.text[1:]
-            pep_link = urljoin(PEP_URL, href)
-            response = get_response(session, pep_link)
-            if response is None:
-                return
-            soup = BeautifulSoup(response.text, features='lxml')
-            status = soup.find(string="Status").parent
-            card_status = status.find_next_sibling().string
-            expected_statuses = EXPECTED_STATUS[preview_status]
-            if card_status not in expected_statuses:
-                logging.info(f"""Несовпадающие статусы:
-                            {pep_link}
-                            Статус в карточке: {card_status}
-                            Ожидаемые статусы: {expected_statuses}""")
-            pep_status_dict[card_status] += 1
+    section_tag = find_tag(soup, 'section', {'id': ['index-by-category']})
+    table_tag = find_tag(section_tag, 'table')
+    tr_tags = table_tag.find_all('tr')
+    for tr_tag in tr_tags[1:]:
+        a_tag = find_tag(tr_tag, 'a')
+        href = a_tag['href']
+        first_column_tag = find_tag(table_tag, 'abbr')
+        preview_status = first_column_tag.text[1:]
+        pep_link = urljoin(PEP_URL, href)
+        response = get_response(session, pep_link)
+        if response is None:
+            continue
+        soup = BeautifulSoup(response.text, features='lxml')
+        status = find_tag(soup, attrs='Status').parent
+        card_status = status.find_next_sibling().string
+        expected_statuses = EXPECTED_STATUS[preview_status]
+        if card_status not in expected_statuses:
+            error_msg += (f"""{pep_link}
+    Статус в карточке: {card_status}
+    Ожидаемые статусы: {expected_statuses}\n""")
+        pep_status_dict[card_status] += 1
+    if error_msg:
+        logging.info(f"Несовпадающие статусы: {''.join(error_msg)}")
     return [('Статус', 'Количество'),
             *pep_status_dict.items(),
             ('Total', pep_status_dict.total())]
