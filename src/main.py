@@ -92,12 +92,12 @@ def download(session):
 
 def pep(session):
     pep_status_dict = Counter()
-    error_msg = ''
+    error_msg = []
     response = get_response(session, PEP_URL)
     if response is None:
         return
     soup = BeautifulSoup(response.text, features='lxml')
-    section_tag = find_tag(soup, 'section', {'id': ['index-by-category']})
+    section_tag = find_tag(soup, 'section', {'id': ['numerical-index']})
     table_tag = find_tag(section_tag, 'table')
     tr_tags = table_tag.find_all('tr')
     for tr_tag in tr_tags[1:]:
@@ -114,7 +114,7 @@ def pep(session):
         card_status = status.find_next_sibling().string
         expected_statuses = EXPECTED_STATUS[preview_status]
         if card_status not in expected_statuses:
-            error_msg += (f"""{pep_link}
+            error_msg.append(f"""{pep_link}
     Статус в карточке: {card_status}
     Ожидаемые статусы: {expected_statuses}\n""")
         pep_status_dict[card_status] += 1
